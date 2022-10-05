@@ -7,7 +7,7 @@ import torchvision.transforms as transforms
 from data_loader import load_dataloader
 import wandb
 
-batch_size = 2
+batch_size = 64
 model_input_shape = (1, 32, 32)
 extra_pixels_before_crop = 4
 random_ratation_fill = 1
@@ -24,12 +24,13 @@ train_dataset, eval_dataset = datasets
 training_loader, validation_loader = data_loaders
 
 lr = 0.1
-epochs = 25
+epochs = 5
 loss_function = nn.BCEWithLogitsLoss
 lr_scheduler = optim.lr_scheduler.ExponentialLR
 lr_gamma = 0.9
 classes = train_dataset.classes
-model_name = 'symbols-v1'
+model_version = 'v1'
+model_name = 'symbols-' + model_version
 weight_initializer =nn.init.kaiming_uniform_
 config = {
     "learning_rate": lr,
@@ -48,18 +49,21 @@ config = {
     "t_dataset__len__": len(train_dataset),
     "t_dataloader__len__": len(training_loader),
     "classes": classes,
-    "model_name": model_name
+    "model_name": model_name,
+    "model_version": model_version
 }
 
-run_name = f'{model_name}-{str(batch_size)}-{str(lr)}'
+run_name = f'{model_version}-{str(batch_size)}-{str(epochs)}-{str(lr)}'
 run = wandb.init(project="symbols", entity="kaizen", name=run_name, config=config)
+run.name = f'{run.name}_{run.id}'
+run.save()
+run_name = run.name
 
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
         self.conv1 = nn.Conv2d(1, 4, 5) # 28 * 28 * 4
         self.bn1 = nn.BatchNorm2d(4)
-#         self.pool = nn.MaxPool2d(2, 2)
         self.conv2 = nn.Conv2d(4, 5, 5) # 24 * 24 * 5
         self.bn2 = nn.BatchNorm2d(5)
         self.conv3 = nn.Conv2d(5, 6, 5) # 20 * 20 * 6
@@ -93,7 +97,6 @@ class Net(nn.Module):
         x = self.conv1(x) # 28 * 28 * 4
         x = self.bn1(x)
         x = F.relu(x) # 28 * 28 * 4
-#         x = self.pool(x)
         x = self.conv2(x) # 24 * 24 * 5
         x = self.bn2(x)
         x = F.relu(x)  # 24 * 24 * 5
@@ -180,6 +183,6 @@ for epoch in range(epochs):  # loop over the dataset multiple times
     run.log_artifact(artifact)
 
 x = torch.randn(1, model_input_shape[0], model_input_shape[1], model_input_shape[2], requires_grad=True)
-torch.onnx.export(net, x, f'./onnx_exports/{run_name}_{epochs}.onnx', input_names=['input'], output_names=['output'])
+torch.onnx.export(net, x, f'./onnx_exports/{run_name}.onnx', input_names=['input'], output_names=['output'])
 
 print('Finished Training')

@@ -2,6 +2,17 @@ html, body {
   margin: 0;
   padding: 0;
 }
+
+body {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: space-around;
+}
+
+.flex {
+  display: flex;
+}
+
 canvas {
   display: block;
   border: 5px solid;

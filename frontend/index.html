@@ -6,12 +6,13 @@
     <script src="p5.dom.min.js"></script>
     <script src="p5.sound.min.js"></script>
     <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="bootstrap.css">
     <meta charset="utf-8">
   </head>
   <body>
     <script src="sketch.js"></script>
     <script>
-      function inference() {
+      function inference(model) {
         <!-- var canvas; // some canvas with an image -->
         var dataURL = canvas.toDataURL();
         var blobBin = atob(dataURL.split(',')[1]);
@@ -23,6 +24,7 @@
         var formdata = new FormData();
         formdata.append("file", file);
         formdata.append("save_file", "true");
+        formdata.append("model", model);
 
         var requestOptions = {
           method: 'POST',
@@ -35,7 +37,7 @@
           .then(result => JSON.parse(result))
           .then(result => {
             print(result)
-            show = document.getElementById("show_result");
+            show = document.getElementById(model+"_result");
             show.innerHTML = result['result']
           })
           .catch(error => console.log('error', error));
@@ -49,8 +51,34 @@
           setup()
       }
     </script>
-    <button onclick='clean_canvas()'>clean</button>
-    <button onclick='inference()'>check</button>
-    <div id='show_result'>result here</div>
+    <script>
+      fetch("http://localhost:5001/models")
+        .then(response => response.text())
+        .then(result => JSON.parse(result))
+        .then(result => {
+          print(result)
+          let models = result['models']
+          let html = ''
+          print(models)
+          for(let j=0; j<models.length; j++) {
+            let i = models[j]
+            html += `
+              <div id=${i} class='row border border-primary m-3 p-3'>
+                <p class='h4 text-center'>${i}</p>
+                <button onclick='inference("${i}")' class="col-md-6">check</button>
+                <div class="col-md-6" id='${i}_result'>result</div>
+              </div>
+            `
+          }
+          show = document.getElementById("models_list");
+          show.innerHTML = html
+        })
+        .catch(error => console.log('error', error));
+    </script>
+    <div>
+      <div id='models_list'>
+      </div>
+      <button class='' onclick='clean_canvas()'>clean</button>
+    </div>
   </body>
 </html>
