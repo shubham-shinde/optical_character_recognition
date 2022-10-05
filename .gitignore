@@ -127,3 +127,22 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+# vim ignores
+*~
+*.swp
+*.swo
+tags
+.comet/
+memo.rb
+.vimspector.json
+.vscode/
+
+# ignore datasets
+data/
+dataset/
+character_recognition/runs/
+character_recognition/onnx_exports/
+character_recognition/saved_models/
+character_recognition/wandb/
