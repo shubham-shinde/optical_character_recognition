@@ -7,7 +7,7 @@ import torchvision.transforms as transforms
 from data_loader import load_dataloader
 import wandb
 
-batch_size = 64
+batch_size = 2
 model_input_shape = (1, 32, 32)
 extra_pixels_before_crop = 4
 random_ratation_fill = 1
@@ -78,7 +78,7 @@ class Net(nn.Module):
 
     def _init_weights(self, m):
         if isinstance(m, nn.Conv2d):
-            weight_initializer(m.weight.data)
+            weight_initializer(m.weight.data,nonlinearity='relu')
             if m.bias is not None:
                 nn.init.constant_(m.bias.data, 0)
         elif isinstance(m, nn.BatchNorm2d):
