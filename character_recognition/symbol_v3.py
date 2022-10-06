@@ -7,9 +7,11 @@ import torchvision.transforms as transforms
 from data_loader import load_dataloader
 import wandb
 
-batch_size = 32
-model_input_shape = (1, 32, 32)
-extra_pixels_before_crop = 2
+## Small Model
+
+batch_size = 16
+model_input_shape = (1, 28, 28)
+extra_pixels_before_crop = 4
 random_ratation_fill = 1
 random_rotation_train = 20
 
@@ -27,9 +29,9 @@ lr = 0.15
 epochs = 30
 loss_function = nn.BCEWithLogitsLoss
 lr_scheduler = optim.lr_scheduler.ExponentialLR
-lr_gamma = 0.9
+lr_gamma = 0.99
 classes = train_dataset.classes
-model_version = 'v1'
+model_version = 'v3'
 model_name = 'symbols-' + model_version
 weight_initializer =nn.init.kaiming_uniform_
 config = {
@@ -54,7 +56,7 @@ config = {
 }
 
 run_name = f'{model_version}-{str(batch_size)}-{str(epochs)}-{str(lr)}'
-run = wandb.init(project="symbols", entity="kaizen", name=run_name, config=config)
+run = wandb.init(project="symbols", entity="kaizen", name=run_name, config=config) #, mode='disabled')
 run.name = f'{run.name}-{run.id}'
 run.save()
 run_name = run.name
@@ -62,22 +64,16 @@ run_name = run.name
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(1, 4, 5) # 28 * 28 * 4
-        self.bn1 = nn.BatchNorm2d(4)
-        self.conv2 = nn.Conv2d(4, 5, 5) # 24 * 24 * 5
-        self.bn2 = nn.BatchNorm2d(5)
-        self.conv3 = nn.Conv2d(5, 6, 5) # 20 * 20 * 6
-        self.bn3 = nn.BatchNorm2d(6)
-        self.conv4 = nn.Conv2d(6, 8, 5) # 16 * 16 * 8
-        self.bn4 = nn.BatchNorm2d(8)
-        self.conv5 = nn.Conv2d(8, 12, 5) # 12 * 12 * 12
-        self.bn5 = nn.BatchNorm2d(12)
-        self.conv6 = nn.Conv2d(12, 16, 5) # 8 * 8 * 16
-        self.bn6 = nn.BatchNorm2d(16)
-        self.fc1 = nn.Linear(16 * 8 * 8, 512)
-        self.fc2 = nn.Linear(512, 256)
-        self.fc3 = nn.Linear(256, 64)
-        self.fc4 = nn.Linear(64, 16)
+        self.conv1 = nn.Conv2d(1, 32, 3) # 26 * 26 * 32
+        self.bn1 = nn.BatchNorm2d(32)
+        self.mp1 = nn.MaxPool2d((2, 2)) # 13 * 13 * 32
+        self.conv2 = nn.Conv2d(32, 64, 3) # 11 * 11 * 64
+        self.bn2 = nn.BatchNorm2d(64)
+        self.mp2 = nn.MaxPool2d((2, 2)) # 5 * 5 * 64
+        self.conv3 = nn.Conv2d(64, 64, 3) # 3 * 3 * 64
+        self.bn3 = nn.BatchNorm2d(64)
+        self.fc1 = nn.Linear(3 * 3 * 64, 64) # 576 > 64
+        self.fc2 = nn.Linear(64, 16)
         self.apply(self._init_weights)
 
     def _init_weights(self, m):
@@ -94,29 +90,20 @@ class Net(nn.Module):
 
     def forward(self, x):
         x = (x-0.5)*2
-        x = self.conv1(x) # 28 * 28 * 4
+        x = self.conv1(x) # 26 * 26 * 32
         x = self.bn1(x)
-        x = F.relu(x) # 28 * 28 * 4
-        x = self.conv2(x) # 24 * 24 * 5
+        x = F.relu(x)
+        x = self.mp1(x) # 13 * 13 * 32
+        x = self.conv2(x) # 11 * 11 * 64
         x = self.bn2(x)
-        x = F.relu(x)  # 24 * 24 * 5
-        x = self.conv3(x) # 20 * 20 * 6
+        x = F.relu(x)
+        x = self.mp2(x) # 5 * 5 * 64
+        x = self.conv3(x) # 3 * 3 * 64
         x = self.bn3(x)
-        x = F.relu(x)  # 20 * 20 * 6
-        x = self.conv4(x) # 16 * 16 * 8
-        x = self.bn4(x)
-        x = F.relu(x)  # 16 * 16 * 8
-        x = self.conv5(x) # 12 * 12 * 12
-        x = self.bn5(x)
-        x = F.relu(x)  # 12 * 12 * 12
-        x = self.conv6(x) # 8 * 8 * 16
-        x = self.bn6(x)
-        x = F.relu(x)  # 8 * 8 * 16
-        x = x.view(-1, 16 * 8 * 8)
+        x = F.relu(x)
+        x = x.view(-1, 3 * 3 * 64)
         x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = F.relu(self.fc3(x))
-        x = self.fc4(x)
+        x = self.fc2(x)
         # x = F.softmax(x, dim=-1)
         return x
 
@@ -167,7 +154,7 @@ for epoch in range(epochs):  # loop over the dataset multiple times
 
     avg_vloss = running_vloss / len(validation_loader)
     avg_vaccuracy = float(vaccuracy)/ total_vdata
-    if epoch%4==0 and epoch > 0:
+    if epoch%2==0 and epoch > 0:
         scheduler.step()
     wandb.log({
         'epoch': epoch,
@@ -176,6 +163,7 @@ for epoch in range(epochs):  # loop over the dataset multiple times
         'epoch_vaccuracy': avg_vaccuracy * 100,
         'epoch_loss': avg_loss
     })
+    print(avg_vaccuracy*100)
     artifact = wandb.Artifact('model', type='model')
     model_file = f'./saved_models/{run_name}_{epoch}'
     torch.save(net.state_dict(), model_file)

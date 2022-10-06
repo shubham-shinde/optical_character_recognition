@@ -24,7 +24,9 @@ CORS(app)
 def get_models():
     response = {}
 
-    response['models'] = list(os.listdir('./character_recognition/onnx_exports/'))
+    files = list(os.listdir('./character_recognition/onnx_exports/'))
+    files.sort(key=lambda x: -os.path.getmtime('./character_recognition/onnx_exports/'+x))
+    response['models'] =  files
 
     response['status'] = {
         'isError': False,
@@ -57,7 +59,14 @@ def get_inference():
 
     response = {}
     session = InferenceSession(f'./character_recognition/onnx_exports/{model}', providers = providers)
-    model_h, model_w = 32, 32
+    if model[:2] == 'v1':
+        model_h, model_w = 32, 32
+    elif model[:2] == 'v2':
+        model_h, model_w = 28, 28
+    elif model[:2] == 'v3':
+        model_h, model_w = 28, 28
+    else:
+        model_h, model_w = 32, 32
 
 
     conf_thres = 0.5

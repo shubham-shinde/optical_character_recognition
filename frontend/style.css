@@ -17,3 +17,8 @@ canvas {
   display: block;
   border: 5px solid;
 }
+
+.scrollbar {
+  height:100vh;
+  overflow-y: scroll;
+}
