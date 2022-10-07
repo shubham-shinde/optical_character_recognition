@@ -13,7 +13,7 @@ extra_pixels_before_crop = 4
 fill = 1
 random_rotation_train = 10
 
-data_loaders, datasets = load_dataloader(
+data_loaders, datasets, data_loader_version = load_dataloader(
     batch_size=batch_size,
     model_input_shape = model_input_shape,
     extra_pixels_before_crop = extra_pixels_before_crop,
@@ -50,7 +50,8 @@ config = {
     "t_dataloader__len__": len(training_loader),
     "classes": classes,
     "model_name": model_name,
-    "model_version": model_version
+    "model_version": model_version,
+    "data_loader_version": data_loader_version
 }
 
 run_name = f'{model_version}-{str(batch_size)}-{str(epochs)}-{str(lr)}'
