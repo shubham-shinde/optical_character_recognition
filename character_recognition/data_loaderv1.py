@@ -2,12 +2,14 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 
+loader_version = 'v1'
+
 def load_dataloader(
     batch_size,
     model_input_shape,
     extra_pixels_before_crop,
     random_rotation_train,
-    random_ratation_fill,
+    fill,
     train_dataset_path = '../dataset/handwritten_math_symbols/train/',
     eval_dataset_path = '../dataset/handwritten_math_symbols/eval/'
 ):
@@ -19,7 +21,7 @@ def load_dataloader(
         transforms.Grayscale(channels),
         transforms.ToTensor(),
 #     transforms.Lambda(lambd=lambda x: 1 - x),
-        transforms.RandomRotation(random_rotation_train, fill=random_ratation_fill),
+        transforms.RandomRotation(random_rotation_train, fill=fill),
 #     transforms.Normalize(torch.Tensor(mean), torch.Tensor(std))
     ])
     eval_dataset_transform = transforms.Compose([
@@ -50,5 +52,5 @@ def load_dataloader(
 
     datasets = (train_dataset, eval_dataset)
     data_loaders = (training_loader, validation_loader)
-    return data_loaders, datasets
+    return data_loaders, datasets, loader_version
 

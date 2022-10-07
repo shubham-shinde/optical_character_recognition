@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
-from data_loader import load_dataloader
+from data_loaderv1 import load_dataloader
 import wandb
 
 ## Small Model
@@ -12,7 +12,7 @@ import wandb
 batch_size = 2
 model_input_shape = (1, 28, 28)
 extra_pixels_before_crop = 4
-random_ratation_fill = 1
+fill = 1
 random_rotation_train = 10
 
 data_loaders, datasets = load_dataloader(
@@ -20,7 +20,7 @@ data_loaders, datasets = load_dataloader(
     model_input_shape = model_input_shape,
     extra_pixels_before_crop = extra_pixels_before_crop,
     random_rotation_train = random_rotation_train,
-    random_ratation_fill = random_ratation_fill
+    fill = fill
 )
 train_dataset, eval_dataset = datasets
 training_loader, validation_loader = data_loaders
@@ -42,7 +42,7 @@ config = {
     "model_input_shape": model_input_shape,
     "extra_pixels_before_crop": extra_pixels_before_crop,
     "random_rotation_train": random_rotation_train,
-    "random_ratation_fill": random_ratation_fill,
+    "fill": fill,
     "loss_function": loss_function,
     "lr_scheduler": lr_scheduler,
     "weight_initializer": weight_initializer,
