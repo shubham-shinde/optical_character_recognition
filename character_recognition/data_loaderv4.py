@@ -6,7 +6,7 @@ from torch.utils.data import Dataset, DataLoader
 import cv2
 import os
 
-loader_version = 'v2'
+loader_version = 'v4'
 
 class Erosin(ImageOnlyTransform):
     def apply(self, img, **params):
@@ -64,13 +64,8 @@ def load_dataloader(
 
     channels, height, width = model_input_shape
     train_dataset_transform = A.Compose([
-        A.Resize(width=width+extra_pixels_before_crop, height=height+extra_pixels_before_crop),
-        A.RandomCrop(width, height),
-        A.Rotate(limit=random_rotation_train, p=1),
-        Dilation(p=0.5),
-        Erosin(p=0.5),
+        A.Resize(width=width, height=height),
         ToBlackAndWhite(p=1),
-        A.Perspective(scale=(0.05, 0.1),p=1, fit_output=True, pad_val=(fill)),
         ToTensorV2()
     ])
 

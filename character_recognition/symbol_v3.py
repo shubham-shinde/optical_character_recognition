@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from data_loaderv1 import load_dataloader
+from data_loaderv2 import load_dataloader
 import wandb
 ## Small Model
 
@@ -22,11 +22,11 @@ data_loaders, datasets, data_loader_version = load_dataloader(
 train_dataset, eval_dataset = datasets
 training_loader, validation_loader = data_loaders
 
-lr = 0.10
+lr = 0.15
 epochs = 30
 loss_function = nn.BCEWithLogitsLoss
 lr_scheduler = optim.lr_scheduler.ExponentialLR
-lr_gamma = 0.99
+lr_gamma = 0.92
 classes = train_dataset.classes
 model_version = 'v3'
 model_name = 'symbols-' + model_version
@@ -54,7 +54,7 @@ config = {
 }
 
 run_name = f'{model_version}-{str(batch_size)}-{str(epochs)}-{str(lr)}'
-run = wandb.init(project="symbols", entity="kaizen", name=run_name, config=config, mode='disabled')
+run = wandb.init(project="symbols", entity="kaizen", name=run_name, config=config) #, mode='disabled')
 run.name = f'{run.name}-{run.id}'
 run.save()
 run_name = run.name
@@ -153,7 +153,7 @@ for epoch in range(epochs):  # loop over the dataset multiple times
 
     avg_vloss = running_vloss / len(validation_loader)
     avg_vaccuracy = float(vaccuracy)/ total_vdata
-    if epoch%5==0 and epoch > 0:
+    if epoch%3==0 and epoch > 0:
         scheduler.step()
     wandb.log({
         'epoch': epoch,

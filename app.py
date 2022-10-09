@@ -114,10 +114,10 @@ def get_inference():
 def model_inference(image, model_session, model_h, model_w):
     inp_resized = cv2.resize(image, (model_h, model_w))
     # inp = inp_resized.transpose((2, 0, 1))[::-1]  # HWC to CHW, BGR to RGB
-    inp = inp_resized[np.newaxis, :, :]
-    inp = np.ascontiguousarray(inp)
+    inp = inp_resized[np.newaxis, np.newaxis, :, :].astype('float32')
+    # inp = np.ascontiguousarray(inp)
     inp = inp/255
-    inp = np.expand_dims(inp, axis = 0).astype('float32')
+    # inp = np.expand_dims(inp, axis = 0).astype('float32')
     inp = 1 - inp
     y = model_session.run(None, { 'input': inp })
     y = y[0]
